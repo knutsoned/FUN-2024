@@ -3,6 +3,12 @@ import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
 import { getSceneModule } from "./createScene";
 import "../style.scss";
 
+/* eslint-disable */
+// console warning says to include this but there's nowhere to actually use it
+import { DefaultCollisionCoordinator as dcc } from "@babylonjs/core/Collisions/collisionCoordinator";
+const sideEffects = { dcc };
+/* eslint-enable */
+
 export const babylonInit = async (): Promise<void> => {
     const createSceneModule = getSceneModule();
     const engineType =
@@ -18,10 +24,10 @@ export const babylonInit = async (): Promise<void> => {
         if (webGPUSupported) {
             // You can decide which WebGPU extensions to load when creating the engine. I am loading all of them
             await import("@babylonjs/core/Engines/WebGPU/Extensions/");
-            const webgpu = engine = new WebGPUEngine(canvas, {
+            const webgpu = (engine = new WebGPUEngine(canvas, {
                 adaptToDeviceRatio: true,
                 antialias: true,
-            });
+            }));
             await webgpu.initAsync();
             engine = webgpu;
         } else {
