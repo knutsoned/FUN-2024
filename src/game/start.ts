@@ -1,7 +1,7 @@
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Scene } from "@babylonjs/core/scene";
-import { createWorld } from "./createWorld";
-import { loadModels } from "./loadModels";
+import { createWorld } from "./worldBuilder";
+import { loadModels } from "./modelLoader";
 import { Config } from "../config";
 import { checkCollisionsAndShow } from "./jetsam";
 
