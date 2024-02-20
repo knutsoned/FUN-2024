@@ -35,10 +35,15 @@ const playerHeight = 20; // a player is 20 "units" tall
 const quarterTurn = 1.5708; // 90 degrees in radians
 const scale = playerHeight * 4; // world dimension per side in "units"
 
+type Container = {
+    [name: string]: Node;
+};
+
 export class PhysicsSceneWithHavok implements CreateSceneClass {
     preTasks = [havokModule];
 
-    walls: Record<string, Node> = {};
+    pillars: Container = {};
+    walls: Container = {};
 
     // make a cel shading style rendering of a texture
     celShade(name: string, texture: Texture, scene: Scene): Material {
@@ -259,13 +264,18 @@ export class PhysicsSceneWithHavok implements CreateSceneClass {
         const dungeon = importResult.meshes[0];
         dungeon.checkCollisions = true;
         dungeon.scaling.scaleInPlace(80);
-        dungeon.showBoundingBox = true;
 
         // now that we loaded the dungeon, get the wall meshes
         for (const part of dungeon.getChildren()[0].getChildren()) {
             const id = part.id.toLowerCase();
             //console.log(id);
             switch (id) {
+                case "pillers":
+                    console.log(part);
+                    for (const pillar of part.getChildren()) {
+                        this.pillars[pillar.id] = pillar;
+                    }
+                    break;
                 case "north":
                 case "south":
                 case "east":
@@ -275,7 +285,7 @@ export class PhysicsSceneWithHavok implements CreateSceneClass {
             }
         }
 
-        // TODO go through the pillars and add collision detection
+        // TODO go through the pillar^H^H^H^H^H^Hobjects and add collision detection
 
         // show north door and east door
         this.hideWall("n");
@@ -304,6 +314,7 @@ export class PhysicsSceneWithHavok implements CreateSceneClass {
         //flute.scaling.scaleInPlace(0.05);
         flute.position.y = playerHeight * 0.7;
         flute.checkCollisions = true;
+        console.log(flute.getBoundingInfo());
         flute.showBoundingBox = true;
 
         // keep the player from going over the edge
