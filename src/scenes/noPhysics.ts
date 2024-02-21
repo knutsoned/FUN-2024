@@ -5,14 +5,10 @@ import "@babylonjs/core/Physics/physicsEngineComponent";
 // If you don't need the standard material you will still need to import it since the scene requires it.
 import "@babylonjs/core/Materials/standardMaterial";
 import { CreateSceneClass } from "../createScene";
-import { havokModule } from "../externals/havok";
-import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 
 import { Container } from "../game/types";
 
-export class PhysicsSceneWithHavok implements CreateSceneClass {
-    preTasks = [havokModule];
-
+export class NoPhysics implements CreateSceneClass {
     pillars: Container = {};
     walls: Container = {};
 
@@ -20,13 +16,12 @@ export class PhysicsSceneWithHavok implements CreateSceneClass {
     createScene = async (engine: Engine): Promise<Scene> => {
         // This creates a basic Babylon Scene object (non-mesh)
         const scene = new Scene(engine);
-        scene.collisionsEnabled = true;
 
-        // PHYSICS! (enable collisions but use another engine)
-        scene.enablePhysics(null, new HavokPlugin(true, await havokModule));
+        // this works as long as you don't need anything physics related but collisions
+        scene.collisionsEnabled = true;
 
         return scene;
     };
 }
 
-export default new PhysicsSceneWithHavok();
+export default new NoPhysics();

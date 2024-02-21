@@ -51,6 +51,9 @@ export class Start {
         const canvas = ctx[0];
         const scene = ctx[1];
         this.handler = ctx[2];
+
+        // this is your basic add a camera and light to a scene and set up its contents kinda thing
+
         // make a first person camera the user can use to navigate the scene
         this.camera = new UniversalCamera(
             "fps",

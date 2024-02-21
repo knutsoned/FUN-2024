@@ -1,15 +1,18 @@
-import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+/*
+import { Quaternion } from "@babylonjs/core/Maths/math.vector";
 import {
     PhysicsShapeBox,
     //PhysicsShapeSphere,
 } from "@babylonjs/core/Physics/v2/physicsShape";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+*/
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
-import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
+//import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 
 import { Config } from "../config";
 import { Container } from "./types";
@@ -102,6 +105,9 @@ function showDoor(walls: Container, dir: string) {
 }
 
 export function createWorld(dungeon: AbstractMesh, scene: Scene) {
+    // loading a model with a ground, so do we need this?
+
+    /*
     // Our built-in 'ground' shape.
     const ground = CreateGround(
         "ground",
@@ -136,6 +142,7 @@ export function createWorld(dungeon: AbstractMesh, scene: Scene) {
 
     // Set the mass to 0
     groundBody.setMassProperties({ mass: 0 });
+    */
 
     // now that we loaded the dungeon, get the wall meshes
     const walls: Container = {};

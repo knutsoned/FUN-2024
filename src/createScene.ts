@@ -7,7 +7,7 @@ import type { Scene } from "@babylonjs/core/scene";
 //import { LoadModelAndEnvScene } from "./scenes/loadModelAndEnv";
 //import { NavigationMeshRecast } from "./scenes/navigationMeshRecast";
 //import { PhysicsSceneWithAmmo } from "./scenes/physicsWithAmmo";
-import { PhysicsSceneWithHavok } from "./scenes/physicsWithHavok";
+import { NoPhysics } from "./scenes/noPhysics";
 
 export interface CreateSceneClass {
     createScene: (engine: Engine, canvas: HTMLCanvasElement) => Promise<Scene>;
@@ -24,5 +24,6 @@ export const getSceneModule = (): CreateSceneClass => {
     //return new LoadModelAndEnvScene();
     //return new NavigationMeshRecast();
     //return new PhysicsSceneWithAmmo();
-    return new PhysicsSceneWithHavok();
+    //return new PhysicsSceneWithHavok();
+    return new NoPhysics();
 };
