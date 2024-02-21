@@ -6,10 +6,30 @@ import "../style.scss";
 /* eslint-disable */
 // console warning says to include this but there's nowhere to actually use it
 import { DefaultCollisionCoordinator as dcc } from "@babylonjs/core/Collisions/collisionCoordinator";
+
+import { GameEvent, GameListener, InitialContext } from "./game/types";
+import { GameAudio } from "./game/audio";
+import { Start } from "./game/start";
 const sideEffects = { dcc };
 /* eslint-enable */
 
-export const babylonInit = async (): Promise<void> => {
+const fresh = new Start();
+
+const listeners: GameListener[] = [];
+
+const dispatchingListener: GameListener = {
+    handleEvent: (event: GameEvent) => {
+        for (const listener of listeners) {
+            listener.handleEvent(event);
+        }
+    },
+};
+
+const audioPlayer = new GameAudio();
+// @ts-expect-error: window object
+window.audioPlayer = audioPlayer;
+
+export const babylonInit = async (): Promise<InitialContext> => {
     const createSceneModule = getSceneModule();
     const engineType =
         location.search.split("engine=")[1]?.split("&")[0] || "webgl";
@@ -37,6 +57,9 @@ export const babylonInit = async (): Promise<void> => {
         engine = new Engine(canvas, true);
     }
 
+    // register audio events
+    listeners.push(audioPlayer);
+
     // Create the scene
     const scene = await createSceneModule.createScene(engine, canvas);
 
@@ -44,6 +67,7 @@ export const babylonInit = async (): Promise<void> => {
     //(window as any).scene = scene;
 
     // Register a render loop to repeatedly render the scene
+    // SRS BSNS ONLY
     engine.runRenderLoop(function () {
         scene.render();
     });
@@ -52,8 +76,11 @@ export const babylonInit = async (): Promise<void> => {
     window.addEventListener("resize", function () {
         engine.resize();
     });
+
+    return [canvas, scene, dispatchingListener];
 };
 
-babylonInit().then(() => {
+babylonInit().then((ctx: InitialContext) => {
     // scene started rendering, everything is initialized
+    fresh.start(ctx);
 });
