@@ -1,14 +1,25 @@
 import * as Tone from "tone";
+import { Midi } from "@tonejs/midi";
+import { Note } from "@tonejs/midi/dist/Note";
+import { Time } from "tone/build/esm/core/type/Units";
 
 import { GameEvent, GameListener } from "./types";
 
-import SampleBass from "/assets/wav/Bass.wav";
-import SampleKey from "/assets/wav/Melody-Key.wav";
-import SampleMelody from "/assets/wav/Melody.wav";
+/*
+import loopBass from "/assets/wav/Bass.wav";
+import loopKey from "/assets/wav/Melody-Key.wav";
+import loopMelody from "/assets/wav/Melody.wav";
+*/
+
+import sampleBass from "/assets/wav/bass.wav";
+import samplePiano from "/assets/wav/piano.wav";
 
 export class GameAudio implements GameListener {
+    loopLength = "2m"; // 8 beat patterns
     looper?: Tone.Loop;
     players?: Tone.Players;
+    bass?: Tone.Sampler;
+    piano?: Tone.Sampler;
     fx?: Tone.Loop;
     distortion = new Tone.Distortion({
         distortion: 0.2,
@@ -19,35 +30,29 @@ export class GameAudio implements GameListener {
         melody: true,
     };
     nearExit = false;
+
     async start(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const audio = this;
-        function samplesLoaded(): void {
-            console.log("start the panic");
-
-            // loop length is 2 measures
-            audio.looper = new Tone.Loop((time) => {
-                for (const key of Object.keys(audio.enabled)) {
-                    if (audio.enabled[key]) {
-                        audio.players?.player(key).start(time);
-                    }
-                }
-            }, "2m").start(0);
-
-            // process effects every 1/4 note
-            audio.fx = new Tone.Loop((time) => {
-                if (audio.nearExit) {
-                    audio.setDistortion(0.6, time);
-                } else {
-                    audio.setDistortion(0, time);
-                }
-            }, "4n").start(0);
-
-            Tone.Transport.start();
-        }
+        // load MIDI files
+        const bassline = await Midi.fromUrl("/assets/mid/bass.mid?url");
+        const melody = await Midi.fromUrl("/assets/mid/melody.mid?url");
+        const key = await Midi.fromUrl("/assets/mid/key.mid?url");
 
         // init audio after user click
         await Tone.start();
+
+        // load wavs as samples
+        this.bass = new Tone.Sampler({
+            urls: {
+                A3: sampleBass,
+            },
+        }).toDestination();
+        this.piano = new Tone.Sampler({
+            urls: {
+                A5: samplePiano,
+            },
+        }).toDestination();
+
+        /* load wavs as loops
         this.players = new Tone.Players(
             {
                 bass: SampleBass,
@@ -59,7 +64,52 @@ export class GameAudio implements GameListener {
                 onload: samplesLoaded,
             }
         ).toDestination();
+        */
+
+        // set up fx chain
         Tone.Destination.chain(this.distortion);
+
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const audio = this;
+        Tone.loaded().then(() => {
+            console.log("start the panic");
+
+            // loop length is 2 measures (2m)
+            audio.looper = new Tone.Loop((time) => {
+                /*
+                // play the key loop
+                for (const key of Object.keys(audio.enabled)) {
+                    if (audio.enabled[key]) {
+                        audio.players?.player(key).start(time);
+                    }
+                }
+                */
+
+                // play the bass line
+                if (this.bass && this.enabled.bass) {
+                    this.playMidi(this.bass, bassline, time);
+                }
+                if (this.piano) {
+                    if (this.enabled.melody) {
+                        this.playMidi(this.piano, melody, time);
+                    }
+                    if (this.enabled.key) {
+                        this.playMidi(this.piano, key, time);
+                    }
+                }
+            }, this.loopLength).start(0);
+
+            // process effects every 1/4 note
+            audio.fx = new Tone.Loop((time) => {
+                if (audio.nearExit) {
+                    audio.setDistortion(0.6, time);
+                } else {
+                    audio.setDistortion(0, time);
+                }
+            }, "4n").start(0);
+
+            Tone.Transport.start();
+        });
     }
 
     handleEvent(event: GameEvent): void {
@@ -88,6 +138,22 @@ export class GameAudio implements GameListener {
 
     pause(): void {
         Tone.Transport.stop();
+    }
+
+    playMidi(sampler: Tone.Sampler, midi: Midi, time: Time) {
+        midi.tracks.forEach((track) => {
+            track.notes.forEach((note) => {
+                this.playSample(sampler, note, time);
+            });
+        });
+    }
+
+    playSample(sampler: Tone.Sampler, note: Note, time: Time) {
+        sampler.triggerAttack(
+            note.name,
+            Tone.Time(time).toSeconds() + note.time,
+            note.velocity
+        );
     }
 
     setDistortion(value: number, time: number) {
