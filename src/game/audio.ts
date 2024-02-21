@@ -11,6 +11,10 @@ import loopKey from "/assets/wav/Melody-Key.wav";
 import loopMelody from "/assets/wav/Melody.wav";
 */
 
+import trackBassline from "../mid/bass.mid";
+import trackMelody from "../mid/melody.mid";
+import trackKey from "../mid/key.mid";
+
 import sampleBass from "/assets/wav/bass.wav";
 import samplePiano from "/assets/wav/piano.wav";
 
@@ -33,9 +37,10 @@ export class GameAudio implements GameListener {
 
     async start(): Promise<void> {
         // load MIDI files
-        const bassline = await Midi.fromUrl("/assets/mid/bass.mid?url");
-        const melody = await Midi.fromUrl("/assets/mid/melody.mid?url");
-        const key = await Midi.fromUrl("/assets/mid/key.mid?url");
+        console.log(trackBassline);
+        const bassline = await Midi.fromUrl(trackBassline);
+        const melody = await Midi.fromUrl(trackMelody);
+        const key = await Midi.fromUrl(trackKey);
 
         // init audio after user click
         await Tone.start();
@@ -87,13 +92,16 @@ export class GameAudio implements GameListener {
 
                 // play the bass line
                 if (this.bass && this.enabled.bass) {
+                    console.log("playing bass");
                     this.playMidi(this.bass, bassline, time);
                 }
                 if (this.piano) {
                     if (this.enabled.melody) {
+                        console.log("playing melody");
                         this.playMidi(this.piano, melody, time);
                     }
                     if (this.enabled.key) {
+                        console.log("playing key");
                         this.playMidi(this.piano, key, time);
                     }
                 }

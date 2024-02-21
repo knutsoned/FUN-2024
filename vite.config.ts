@@ -4,6 +4,7 @@ import glsl from "vite-plugin-glsl";
 
 /** @type {import('vite').UserConfig} */
 export default defineConfig({
+    assetsInclude: ["**/*.mid"],
     base: "./",
     build: {
         chunkSizeWarningLimit: 700,
