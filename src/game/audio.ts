@@ -26,7 +26,7 @@ export class GameAudio implements GameListener {
     piano?: Tone.Sampler;
     fx?: Tone.Loop;
     distortion = new Tone.Distortion({
-        distortion: 0.2,
+        distortion: 0.2, // mild distortion
     });
     enabled: Record<string, boolean> = {
         bass: true,
@@ -96,10 +96,13 @@ export class GameAudio implements GameListener {
                     this.playMidi(this.bass, bassline, time);
                 }
                 if (this.piano) {
+                    // play the main melody
                     if (this.enabled.melody) {
                         console.log("playing melody");
                         this.playMidi(this.piano, melody, time);
                     }
+
+                    // play the part at the end
                     if (this.enabled.key) {
                         console.log("playing key");
                         this.playMidi(this.piano, key, time);
@@ -120,6 +123,7 @@ export class GameAudio implements GameListener {
         });
     }
 
+    // react to stuff happening in the game
     handleEvent(event: GameEvent): void {
         switch (event.type) {
             case "AwayFromAllExits":
@@ -148,6 +152,7 @@ export class GameAudio implements GameListener {
         Tone.Transport.stop();
     }
 
+    // play a whole midi track
     playMidi(sampler: Tone.Sampler, midi: Midi, time: Time) {
         midi.tracks.forEach((track) => {
             track.notes.forEach((note) => {
@@ -156,6 +161,7 @@ export class GameAudio implements GameListener {
         });
     }
 
+    // play one note on a sampler
     playSample(sampler: Tone.Sampler, note: Note, time: Time) {
         sampler.triggerAttack(
             note.name,
@@ -164,6 +170,7 @@ export class GameAudio implements GameListener {
         );
     }
 
+    // change the wet/dry mix of the distortion effect
     setDistortion(value: number, time: number) {
         // right away
         // this.distortion.wet.value = amount;
