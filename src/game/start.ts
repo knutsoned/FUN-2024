@@ -101,16 +101,20 @@ export class Start {
 
     // IF THE PLAYER HIT RESET
     recycle() {
-        // anything that has to happen to dispose old objects or reset objects to default values
+        /*
+        anything that has to happen to dispose old objects 
+        and recreate in order to to reset to a point
+        just after calling start the first time
 
-        // followed by anything that overrides defaults just before the game loop starts or keeps ticking
+        followed by anything that overrides defaults
+        just before the game loop starts or keeps ticking
+        */
         this.again();
     }
 
     // WHY ARE WE SHOUTING
     again() {
         // set up, assuming either start just finished or the scene is being recycled
-
         if (this.dungeon) {
             checkCollisionsAndShow(this.dungeon);
         }
