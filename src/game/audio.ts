@@ -12,18 +12,22 @@ import loopMelody from "/assets/wav/Melody.wav";
 */
 
 import trackBassline from "../mid/bass.mid";
-import trackMelody from "../mid/melody.mid";
+//import trackMelody from "../mid/melody.mid";
 import trackKey from "../mid/key.mid";
 
 import sampleBass from "/assets/wav/bass.wav";
 import samplePiano from "/assets/wav/piano.wav";
+import sampleKick from "/assets/wav/BD909TapeSat01A03.wav";
 
 export class GameAudio implements GameListener {
-    loopLength = "2m"; // 8 beat patterns
+    bpm = 72;
+    loopLength = "1m"; // 4 beat patterns
     looper?: Tone.Loop;
     players?: Tone.Players;
     bass?: Tone.Sampler;
+    kick?: Tone.Sampler;
     piano?: Tone.Sampler;
+    piano2?: Tone.Sampler;
     fx?: Tone.Loop;
     distortion = new Tone.Distortion({
         distortion: 0.2, // mild distortion
@@ -35,12 +39,11 @@ export class GameAudio implements GameListener {
     };
     nearExit = false;
 
-    async start(): Promise<void> {
+    async init(): Promise<void> {
         // load MIDI files
-        console.log(trackBassline);
-        const bassline = await Midi.fromUrl(trackBassline);
-        const melody = await Midi.fromUrl(trackMelody);
-        const key = await Midi.fromUrl(trackKey);
+        const bassline = await this.loadMidi("bass", trackBassline);
+        //const melody = await this.loadMidi("melody", trackMelody);
+        const key = await this.loadMidi("key", trackKey);
 
         // init audio after user click
         await Tone.start();
@@ -48,13 +51,33 @@ export class GameAudio implements GameListener {
         // load wavs as samples
         this.bass = new Tone.Sampler({
             urls: {
-                A3: sampleBass,
+                //A3: sampleBass,
+                E4: sampleBass,
             },
+            attack: "8n",
         }).toDestination();
+
+        this.kick = new Tone.Sampler({
+            urls: {
+                D4: sampleKick,
+            },
+            attack: 0,
+        }).toDestination();
+
         this.piano = new Tone.Sampler({
             urls: {
+                //A5: samplePiano,
+                A3: samplePiano,
+            },
+            attack: 10,
+        }).toDestination();
+
+        this.piano2 = new Tone.Sampler({
+            urls: {
+                //A5: samplePiano,
                 A5: samplePiano,
             },
+            attack: 40,
         }).toDestination();
 
         /* load wavs as loops
@@ -74,12 +97,39 @@ export class GameAudio implements GameListener {
         // set up fx chain
         Tone.Destination.chain(this.distortion);
 
+        // tempo
+        Tone.Transport.bpm.value = this.bpm;
+
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const audio = this;
         Tone.loaded().then(() => {
             console.log("start the panic");
 
-            // loop length is 2 measures (2m)
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
+            const melodyPattern = new Tone.Pattern(
+                (time, note) => {
+                    if (this.piano) {
+                        this.piano.triggerAttackRelease(note, "8n", time);
+                    }
+                },
+                ["C4", "D4", "E4", "G4", "A4"],
+                "randomWalk"
+            );
+            melodyPattern.playbackRate = 2;
+            melodyPattern.probability = 0.35;
+
+            const rhythmPattern = new Tone.Pattern(
+                (time, note) => {
+                    if (this.piano2) {
+                        this.piano2.triggerAttackRelease(note, "2n", time);
+                    }
+                },
+                ["C4", "D4", "E4", "A4"],
+                "randomWalk"
+            );
+            rhythmPattern.probability = 0.42;
+
+            // loop length is 1 measure (1m)
             audio.looper = new Tone.Loop((time) => {
                 /*
                 // play the key loop
@@ -92,19 +142,42 @@ export class GameAudio implements GameListener {
 
                 // play the bass line
                 if (this.bass && this.enabled.bass) {
-                    console.log("playing bass");
+                    //console.log("playing bass");
                     this.playMidi(this.bass, bassline, time);
                 }
+
+                if (this.kick) {
+                    const velocity = 0.42;
+                    this.kick.triggerAttack("D4", time, velocity);
+                    this.kick.triggerAttack(
+                        "A4",
+                        time + Tone.Time("4n").toSeconds(),
+                        velocity
+                    );
+                    this.kick.triggerAttack(
+                        "D4",
+                        time + Tone.Time("4n").toSeconds() * 2,
+                        velocity
+                    );
+                    this.kick.triggerAttack(
+                        "D4",
+                        time + Tone.Time("4n").toSeconds() * 3.5,
+                        velocity
+                    );
+                }
+
                 if (this.piano) {
                     // play the main melody
                     if (this.enabled.melody) {
-                        console.log("playing melody");
-                        this.playMidi(this.piano, melody, time);
+                        //console.log("playing melody");
+                        //this.playMidi(this.piano, melody, time);
+                        melodyPattern.start();
+                        rhythmPattern.start();
                     }
 
                     // play the part at the end
                     if (this.enabled.key) {
-                        console.log("playing key");
+                        //console.log("playing key");
                         this.playMidi(this.piano, key, time);
                     }
                 }
@@ -117,7 +190,7 @@ export class GameAudio implements GameListener {
                 } else {
                     audio.setDistortion(0, time);
                 }
-            }, "4n").start(0);
+            }, "8n").start(0);
 
             Tone.Transport.start();
         });
@@ -137,11 +210,19 @@ export class GameAudio implements GameListener {
                     this.enabled.key = true;
                 }
                 break;
+            case "StartAudio":
+                this.bpm = event.detail;
         }
     }
 
     loadingError(err: Error): void {
         console.error(err);
+    }
+
+    async loadMidi(name: string, res: string): Promise<Midi> {
+        const out = await Midi.fromUrl(res);
+        out.header.setTempo(this.bpm);
+        return out;
     }
 
     play(): void {

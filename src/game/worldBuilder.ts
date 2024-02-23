@@ -27,8 +27,8 @@ function createBound(
     const bound = CreateBox(
         "bound " + name,
         {
-            width: Config.scale * 2,
-            height: Config.scale,
+            width: Config.worldSize * 2,
+            height: Config.worldSize,
             depth: 1,
         },
         scene
@@ -178,25 +178,25 @@ export function createWorld(dungeon: AbstractMesh, scene: Scene) {
     // keep the player from going over the edge
     createBound(
         "north",
-        new Vector3(0, Config.scale / 2, -Config.scale),
+        new Vector3(0, Config.scale / 2, -Config.worldSize),
         false,
         scene
     );
     createBound(
         "south",
-        new Vector3(0, Config.scale / 2, Config.scale),
+        new Vector3(0, Config.scale / 2, Config.worldSize),
         false,
         scene
     );
     createBound(
         "east",
-        new Vector3(-Config.scale, Config.scale / 2, 0),
+        new Vector3(-Config.worldSize, Config.scale / 2, 0),
         true,
         scene
     );
     createBound(
         "west",
-        new Vector3(Config.scale, Config.scale / 2, 0),
+        new Vector3(Config.worldSize, Config.scale / 2, 0),
         true,
         scene
     );

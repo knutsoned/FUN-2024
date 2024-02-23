@@ -1,4 +1,5 @@
 import { mkAlea } from "@spissvinkel/alea";
+import { RNDR } from "../game/types";
 
 // import from https://stackoverflow.com/a/24457420
 function isNumeric(value: string) {
@@ -7,13 +8,10 @@ function isNumeric(value: string) {
 }
 
 // LINL is not logo
-export type RNDR = {
-    random(): number;
-};
-
 export type Options = {
     height: number; // wall height in LUs (LINL Units)
     scale: number; // how many units per LU?
+    prng?: RNDR;
     seed?: string; // seed for the PRNG
     thickness: number; // thickness of walls in LUs
 };
@@ -94,7 +92,7 @@ export class Interpreter implements LanguageImplementation {
 
     constructor(opts: Options) {
         this.seed = opts.seed ? opts.seed : new Date().toISOString();
-        this.prng = mkAlea(this.seed);
+        this.prng = opts.prng ? opts.prng : mkAlea(this.seed);
         this.opts = opts;
         this.running = false;
         this.methodMap = {
@@ -194,25 +192,20 @@ export class Interpreter implements LanguageImplementation {
                 statementInd++
             ) {
                 const statement = program[statementInd];
-                console.log(statement);
+                //console.log(statement);
                 let value = undefined;
                 let makeStatement = true;
-                console.log("next: " + program[statementInd + 1]);
                 // see if there is a numeric statements right after this one
                 if (
                     statementInd < program.length - 1 &&
                     isNumeric(program[statementInd + 1])
                 ) {
-                    console.log("assigning argument");
                     // current statement has an argument ahead, assign it
                     value = Number(program[statementInd + 1]);
                 } else {
                     if (isNumeric(statement)) {
                         // current statement is an argument to previous statement, skip it
                         makeStatement = false;
-                        console.log("-skipping");
-                    } else {
-                        console.log("-adding " + statement);
                     }
                 }
 
@@ -243,7 +236,7 @@ export class Interpreter implements LanguageImplementation {
         for (let pc = 0; pc < program.length; pc++) {
             const code = program[pc];
             console.log(pc);
-            console.log(code);
+            //console.log(code);
 
             // actually execute the code
             renderer.brrr(code);

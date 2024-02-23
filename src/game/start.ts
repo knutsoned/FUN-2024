@@ -14,41 +14,45 @@ import { GameListener, InitialContext } from "./types";
 export class Start {
     // now we start making things properties
     camera?: UniversalCamera;
-    cameraPos: Vector3 = new Vector3(
-        0,
-        Config.playerHeight,
-        Config.scale * 0.9
-    );
+    cameraPos: Vector3 = new Vector3(0, Config.playerHeight, Config.scale * 10);
     dungeon?: AbstractMesh;
     flute?: AbstractMesh;
     scene?: Scene;
+
+    // loop stuff
     listener?: GameListener;
+    awayFromAll = true;
 
     exits: Record<string, Vector3> = {
-        north: new Vector3(0, 0, -Config.scale),
-        east: new Vector3(-Config.scale, 0, 0),
-        west: new Vector3(Config.scale, 0, 0),
+        north: new Vector3(0, 0, -Config.worldSize),
+        east: new Vector3(-Config.worldSize, 0, 0),
+        west: new Vector3(Config.worldSize, 0, 0),
     };
 
     // MAIN GAME LOOP
     handleBeforeRender(): void {
         if (this.camera) {
             const pos = this.camera.position;
-            let awayFromAll = true;
+            const prevAway = this.awayFromAll;
+            let newAway = true;
             for (const key of Object.keys(this.exits)) {
                 const distance = Vector3.Distance(pos, this.exits[key]);
-                if (distance < 50.0) {
-                    awayFromAll = false;
-                    this.listener?.handleEvent(
-                        new CustomEvent("NearExit", {
-                            detail: key,
-                        })
-                    );
+                if (distance < 42.0) {
+                    newAway = false;
+                    if (prevAway) {
+                        this.listener?.handleEvent(
+                            new CustomEvent("NearExit", {
+                                detail: key,
+                            })
+                        );
+                    }
                 }
             }
-            if (awayFromAll) {
+            if (!prevAway && newAway) {
+                //console.log("awayFromAll");
                 this.listener?.handleEvent(new CustomEvent("AwayFromAllExits"));
             }
+            this.awayFromAll = newAway;
         }
     }
 
@@ -65,7 +69,7 @@ export class Start {
         // in case we add a jump button
         this.camera.applyGravity = true;
         // a shape around the player used to detect collisions
-        this.camera.ellipsoid = new Vector3(5, Config.playerHeight / 2, 5);
+        this.camera.ellipsoid = new Vector3(1, Config.playerHeight / 2, 1);
         // this adds the camera/player to the collision system, otherwise you could go through walls etc
         this.camera.checkCollisions = true;
 
@@ -120,7 +124,7 @@ export class Start {
         // point the camera to the origin but at eye level
         if (this.camera) {
             this.camera.position = this.cameraPos;
-            this.camera.setTarget(new Vector3(0, Config.playerHeight / 2, 0));
+            this.camera.setTarget(new Vector3(0, Config.playerHeight, 0));
         }
 
         if (this.dungeon) {
@@ -141,8 +145,14 @@ export class Start {
             scale: 8,
             thickness: 0.02,
         };
+
+        // init the evil AI
         const wallDrawer = new LINL.Interpreter(opts);
-        const wallDescription = wallDrawer.parse("pu fd rt pd fd 2");
+
+        // download the MCP
+        const wallDescription = wallDrawer.parse("pu fd rt pd fd 2 pu");
+
+        // try and take over the world!
         wallDrawer.start(wallDescription);
     }
 

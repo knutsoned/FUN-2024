@@ -18,3 +18,7 @@ export type InitialContext = {
     scene: Scene;
     listener: GameListener;
 };
+
+export type RNDR = {
+    random(): number;
+};

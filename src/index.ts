@@ -1,6 +1,9 @@
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
 import { getSceneModule } from "./createScene";
+
+import "nes.css/css/nes.min.css";
+
 import "../style.scss";
 
 /* eslint-disable */
