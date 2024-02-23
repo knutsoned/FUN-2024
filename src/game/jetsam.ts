@@ -2,7 +2,6 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Scene } from "@babylonjs/core/scene";
 import { BrickProceduralTexture } from "@babylonjs/procedural-textures/brick/brickProceduralTexture";
-import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 
 // procedurally generated bricks
 export function bricks(name: string, scene: Scene): Texture {
@@ -14,12 +13,4 @@ export function bricks(name: string, scene: Scene): Texture {
     //brickTexture.numberOfBricksWidth = 10;
     brickTexture.numberOfBricksWidth = 3;
     return brickTexture;
-}
-
-export function checkCollisionsAndShow(parent: AbstractMesh) {
-    parent.checkCollisions = true;
-    for (const mesh of parent.getChildMeshes()) {
-        mesh.checkCollisions = true;
-    }
-    parent.isVisible = true;
 }

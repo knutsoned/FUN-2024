@@ -13,4 +13,8 @@ export interface GameListener {
 }
 
 // returned by BJS init process
-export type InitialContext = [HTMLCanvasElement, Scene, GameListener];
+export type InitialContext = {
+    canvas: HTMLCanvasElement;
+    scene: Scene;
+    listener: GameListener;
+};

@@ -7,16 +7,22 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { createWorld } from "./worldBuilder";
 import { loadModels } from "./modelLoader";
 import { Config } from "../config";
-import { checkCollisionsAndShow } from "./jetsam";
+import { checkCollisionsAndShow } from "./flotsam";
+import * as LINL from "../linl";
 import { GameListener, InitialContext } from "./types";
 
 export class Start {
     // now we start making things properties
     camera?: UniversalCamera;
+    cameraPos: Vector3 = new Vector3(
+        0,
+        Config.playerHeight,
+        Config.scale * 0.9
+    );
     dungeon?: AbstractMesh;
     flute?: AbstractMesh;
     scene?: Scene;
-    handler?: GameListener;
+    listener?: GameListener;
 
     exits: Record<string, Vector3> = {
         north: new Vector3(0, 0, -Config.scale),
@@ -33,7 +39,7 @@ export class Start {
                 const distance = Vector3.Distance(pos, this.exits[key]);
                 if (distance < 50.0) {
                     awayFromAll = false;
-                    this.handler?.handleEvent(
+                    this.listener?.handleEvent(
                         new CustomEvent("NearExit", {
                             detail: key,
                         })
@@ -41,33 +47,27 @@ export class Start {
                 }
             }
             if (awayFromAll) {
-                this.handler?.handleEvent(new CustomEvent("AwayFromAllExits"));
+                this.listener?.handleEvent(new CustomEvent("AwayFromAllExits"));
             }
         }
     }
 
     // MAIN GAME ENTRY POINT
     async start(ctx: InitialContext) {
-        const canvas = ctx[0];
-        const scene = ctx[1];
-        this.handler = ctx[2];
+        const canvas = ctx.canvas;
+        const scene = ctx.scene;
+        this.listener = ctx.listener;
 
         // this is your basic add a camera and light to a scene and set up its contents kinda thing
 
         // make a first person camera the user can use to navigate the scene
-        this.camera = new UniversalCamera(
-            "fps",
-            new Vector3(0, Config.playerHeight, Config.scale * 0.9),
-            scene
-        );
+        this.camera = new UniversalCamera("fps", this.cameraPos, scene);
         // in case we add a jump button
         this.camera.applyGravity = true;
         // a shape around the player used to detect collisions
         this.camera.ellipsoid = new Vector3(5, Config.playerHeight / 2, 5);
         // this adds the camera/player to the collision system, otherwise you could go through walls etc
         this.camera.checkCollisions = true;
-        // point the camera to the origin but at eye level
-        this.camera.setTarget(new Vector3(0, Config.playerHeight / 2, 0));
 
         // This attaches the camera to the canvas
         this.camera.attachControl(canvas, true);
@@ -106,6 +106,8 @@ export class Start {
         and recreate in order to to reset to a point
         just after calling start the first time
 
+        removeWalls()
+
         followed by anything that overrides defaults
         just before the game loop starts or keeps ticking
         */
@@ -115,6 +117,12 @@ export class Start {
     // WHY ARE WE SHOUTING
     again() {
         // set up, assuming either start just finished or the scene is being recycled
+        // point the camera to the origin but at eye level
+        if (this.camera) {
+            this.camera.position = this.cameraPos;
+            this.camera.setTarget(new Vector3(0, Config.playerHeight / 2, 0));
+        }
+
         if (this.dungeon) {
             checkCollisionsAndShow(this.dungeon);
         }
@@ -126,6 +134,16 @@ export class Start {
             this.flute.checkCollisions = true;
             this.flute.isVisible = true;
         }
+
+        // make some walls
+        const opts: LINL.Options = {
+            height: 1,
+            scale: 8,
+            thickness: 0.02,
+        };
+        const wallDrawer = new LINL.Interpreter(opts);
+        const wallDescription = wallDrawer.parse("pu fd rt pd fd 2");
+        wallDrawer.start(wallDescription);
     }
 
     // shh

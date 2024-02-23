@@ -17,10 +17,10 @@ const fresh = new Start();
 
 const listeners: GameListener[] = [];
 
-const dispatchingListener: GameListener = {
+const listener: GameListener = {
     handleEvent: (event: GameEvent) => {
-        for (const listener of listeners) {
-            listener.handleEvent(event);
+        for (const delegateListener of listeners) {
+            delegateListener.handleEvent(event);
         }
     },
 };
@@ -77,7 +77,7 @@ export const babylonInit = async (): Promise<InitialContext> => {
         engine.resize();
     });
 
-    return [canvas, scene, dispatchingListener];
+    return { canvas, scene, listener };
 };
 
 babylonInit().then((ctx: InitialContext) => {
