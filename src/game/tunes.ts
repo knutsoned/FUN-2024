@@ -77,7 +77,7 @@ export const pianoRoll: Roll = {
                             },
                         },
                         {
-                            offset: 2,
+                            offset: 1,
                             probability: 0.75,
                             sound: {
                                 pitch: "A4",
@@ -85,7 +85,7 @@ export const pianoRoll: Roll = {
                             },
                         },
                         {
-                            offset: 3,
+                            offset: 2,
                             probability: 0.66,
                             sound: {
                                 pitch: "D4",
@@ -93,7 +93,7 @@ export const pianoRoll: Roll = {
                             },
                         },
                         {
-                            offset: 4.5,
+                            offset: 3.5,
                             probability: 0.42,
                             sound: {
                                 pitch: "D4",

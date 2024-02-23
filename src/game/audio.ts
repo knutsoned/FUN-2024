@@ -27,6 +27,7 @@ import trackKey from "../mid/key.mid";
 import sampleBass from "/assets/wav/bass.wav";
 import samplePiano from "/assets/wav/piano.wav";
 import sampleKick from "/assets/wav/BD909TapeSat01A03.wav";
+import { Config } from "../config";
 
 export class GameAudio implements GameListener {
     bpm = 72;
@@ -46,6 +47,7 @@ export class GameAudio implements GameListener {
         bass: true,
         key: false,
         melody: true,
+        kick: true,
     };
     nearExit = false;
     activeMelody: Tone.Pattern<string>[] = [];
@@ -103,14 +105,16 @@ export class GameAudio implements GameListener {
                 const voice = this.voices[trigger.sound.voice];
                 if (voice) {
                     const seconds = Tone.Time(this.roll.beatLength).toSeconds();
-                    voice.triggerAttack(
-                        trigger.sound.pitch,
-                        time +
-                            (trigger.offset
-                                ? seconds * trigger.offset
-                                : seconds),
-                        trigger.velocity ? trigger.velocity : this.kickVelocity
-                    );
+                    if (trigger.sound.voice !== "kick" || this.enabled.kick) {
+                        voice.triggerAttack(
+                            trigger.sound.pitch,
+                            time +
+                                (trigger.offset ? seconds * trigger.offset : 0),
+                            trigger.velocity
+                                ? trigger.velocity
+                                : this.kickVelocity
+                        );
+                    }
                 }
             }
         });
@@ -204,9 +208,20 @@ export class GameAudio implements GameListener {
                 this.voices["kick"] = this.kick;
             }
 
-            if (this.activeTune && this.activeTune.melody) {
-                for (let i = 0; i < this.activeTune.melody.length; i++) {
-                    this.addMelody(this.activeTune.melody[i]);
+            // setup the patterns
+            if (this.activeTune) {
+                const tune = this.activeTune;
+                if (tune.melody) {
+                    for (let i = 0; i < tune.melody.length; i++) {
+                        this.addMelody(tune.melody[i]);
+                    }
+                }
+                if (tune.rhythm) {
+                    console.log("HERE COME THE DRUMS");
+                    const kickTriggers = tune.rhythm[0].triggers;
+                    for (let i = 0; i < kickTriggers.length; i++) {
+                        this.addTrigger(kickTriggers[i]);
+                    }
                 }
             }
 
@@ -233,7 +248,6 @@ export class GameAudio implements GameListener {
                 "randomWalk"
             );
             rhythmPattern.probability = 0.42;
-            */
 
             // 2.78 on the floor
 
@@ -283,6 +297,7 @@ export class GameAudio implements GameListener {
                 loopEnd: "1n",
             });
             beat3.start(0);
+            */
 
             console.log("infinite improbability configured somehow");
 
@@ -297,10 +312,12 @@ export class GameAudio implements GameListener {
                 }
                 */
 
-                // play the bass line
+                this.enabled.kick = Config.prng.random() < 0.9;
+
+                // play the bass line, probably
                 if (this.bass && this.enabled.bass) {
                     //console.log("playing bass");
-                    this.playMidi(this.bass, bassline, time);
+                    this.playMidi(this.bass, bassline, time, 0.8);
                 }
 
                 if (this.piano) {
@@ -334,6 +351,14 @@ export class GameAudio implements GameListener {
                     this.setDistortion(0, time);
                 }
             }, "8n").start(0);
+
+            /* this does not do what I think it does
+            Tone.Transport.schedule((time) => {
+                if (this.looper) {
+                    this.looper.start(time);
+                }
+            }, 0);
+            */
 
             Tone.Transport.start();
         });
@@ -377,12 +402,18 @@ export class GameAudio implements GameListener {
     }
 
     // play a whole midi track
-    playMidi(sampler: Tone.Sampler, midi: Midi, time: Time) {
-        midi.tracks.forEach((track) => {
-            track.notes.forEach((note) => {
-                this.playSample(sampler, note, time);
+    playMidi(
+        sampler: Tone.Sampler,
+        midi: Midi,
+        time: Time,
+        probability?: number
+    ) {
+        if (!probability || Config.prng.random() < probability)
+            midi.tracks.forEach((track) => {
+                track.notes.forEach((note) => {
+                    this.playSample(sampler, note, time);
+                });
             });
-        });
     }
 
     // play one note on a sampler
