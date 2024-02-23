@@ -21,6 +21,7 @@ import sampleKick from "/assets/wav/BD909TapeSat01A03.wav";
 
 export class GameAudio implements GameListener {
     bpm = 72;
+    kickVelocity = 0.42;
     loopLength = "1m"; // 4 beat patterns
     looper?: Tone.Loop;
     players?: Tone.Players;
@@ -129,6 +130,22 @@ export class GameAudio implements GameListener {
             );
             rhythmPattern.probability = 0.42;
 
+            const note = new Tone.ToneEvent((time) => {
+                if (this.kick) {
+                    this.kick.triggerAttack(
+                        "D4",
+                        time + Tone.Time("4n").toSeconds() * 3.5,
+                        this.kickVelocity
+                    );
+                }
+            });
+            note.probability = 0.25;
+            note.set({
+                loop: true,
+                loopEnd: "1n",
+            });
+            note.start(0);
+
             // loop length is 1 measure (1m)
             audio.looper = new Tone.Loop((time) => {
                 /*
@@ -147,22 +164,16 @@ export class GameAudio implements GameListener {
                 }
 
                 if (this.kick) {
-                    const velocity = 0.42;
-                    this.kick.triggerAttack("D4", time, velocity);
+                    this.kick.triggerAttack("D4", time, this.kickVelocity);
                     this.kick.triggerAttack(
                         "A4",
                         time + Tone.Time("4n").toSeconds(),
-                        velocity
+                        this.kickVelocity
                     );
                     this.kick.triggerAttack(
                         "D4",
                         time + Tone.Time("4n").toSeconds() * 2,
-                        velocity
-                    );
-                    this.kick.triggerAttack(
-                        "D4",
-                        time + Tone.Time("4n").toSeconds() * 3.5,
-                        velocity
+                        this.kickVelocity
                     );
                 }
 
