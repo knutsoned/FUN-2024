@@ -3,7 +3,16 @@ import { Midi } from "@tonejs/midi";
 import { Note } from "@tonejs/midi/dist/Note";
 import { Time } from "tone/build/esm/core/type/Units";
 
-import { GameEvent, GameListener } from "./types";
+import { pianoRoll } from "./tunes";
+import {
+    GameEvent,
+    GameListener,
+    Melody,
+    Rhythm,
+    Roll,
+    Trigger,
+    Tune,
+} from "./types";
 
 /*
 import loopBass from "/assets/wav/Bass.wav";
@@ -39,8 +48,87 @@ export class GameAudio implements GameListener {
         melody: true,
     };
     nearExit = false;
+    activeMelody: Tone.Pattern<string>[] = [];
+    activeRhythm?: Rhythm;
+    activeTriggers?: Trigger[];
+    activeTune?: Tune;
+    doubleTime = "8n";
+    roll: Roll = pianoRoll;
+    beatLength = this.roll.beatLength;
+    voices: Record<string, Tone.Sampler> = {};
+
+    makeNoteArray(melody: Melody): string[] {
+        const out = [];
+        for (let i = 0; i < melody.notes.length; i++) {
+            const note = melody.notes[i];
+            out.push(
+                note.pitch +
+                    String(
+                        note.octaveDelta
+                            ? melody.octave + note.octaveDelta
+                            : melody.octave
+                    )
+            );
+        }
+        return out;
+    }
+
+    addMelody(melody: Melody) {
+        const notes = this.makeNoteArray(melody);
+        const melodyPattern = new Tone.Pattern(
+            (time, note) => {
+                if (this.piano) {
+                    this.piano.triggerAttackRelease(
+                        note,
+                        melody.duration ? melody.duration : this.doubleTime,
+                        time
+                    );
+                }
+            },
+            notes,
+            "randomWalk"
+        );
+        if (melody.probability) {
+            melodyPattern.probability = melody.probability;
+        }
+        if (melody.rate) {
+            melodyPattern.playbackRate = melody.rate;
+        }
+        this.activeMelody.push(melodyPattern);
+    }
+
+    addTrigger(trigger: Trigger) {
+        const toneEvent = new Tone.ToneEvent((time) => {
+            if (trigger.sound.voice) {
+                const voice = this.voices[trigger.sound.voice];
+                if (voice) {
+                    const seconds = Tone.Time(this.roll.beatLength).toSeconds();
+                    voice.triggerAttack(
+                        trigger.sound.pitch,
+                        time +
+                            (trigger.offset
+                                ? seconds * trigger.offset
+                                : seconds),
+                        trigger.velocity ? trigger.velocity : this.kickVelocity
+                    );
+                }
+            }
+        });
+        if (trigger.probability) {
+            toneEvent.probability = trigger.probability;
+        }
+        toneEvent.set({
+            loop: true,
+            loopEnd: this.loopLength,
+        });
+        toneEvent.start(0);
+        this.activeRhythm;
+    }
 
     async init(): Promise<void> {
+        // set up sequences
+        this.activeTune = pianoRoll.tunes.main;
+
         // load MIDI files
         const bassline = await this.loadMidi("bass", trackBassline);
         //const melody = await this.loadMidi("melody", trackMelody);
@@ -103,19 +191,26 @@ export class GameAudio implements GameListener {
 
         Tone.loaded().then(() => {
             console.log("start the panic");
+            if (this.piano) {
+                this.voices["piano"] = this.piano;
+            }
+            if (this.piano2) {
+                this.voices["piano2"] = this.piano2;
+            }
+            if (this.bass) {
+                this.voices["bass"] = this.bass;
+            }
+            if (this.kick) {
+                this.voices["kick"] = this.kick;
+            }
 
-            const melodyPattern = new Tone.Pattern(
-                (time, note) => {
-                    if (this.piano) {
-                        this.piano.triggerAttackRelease(note, "8n", time);
-                    }
-                },
-                ["C4", "D4", "E4", "G4", "A4"],
-                "randomWalk"
-            );
-            melodyPattern.playbackRate = 2;
-            melodyPattern.probability = 0.35;
+            if (this.activeTune && this.activeTune.melody) {
+                for (let i = 0; i < this.activeTune.melody.length; i++) {
+                    this.addMelody(this.activeTune.melody[i]);
+                }
+            }
 
+            /*
             const melodyPattern2 = new Tone.Pattern(
                 (time, note) => {
                     if (this.piano) {
@@ -138,6 +233,7 @@ export class GameAudio implements GameListener {
                 "randomWalk"
             );
             rhythmPattern.probability = 0.42;
+            */
 
             // 2.78 on the floor
 
@@ -188,23 +284,6 @@ export class GameAudio implements GameListener {
             });
             beat3.start(0);
 
-            // maybe beat 4.5
-            const beat45 = new Tone.ToneEvent((time) => {
-                if (this.kick) {
-                    this.kick.triggerAttack(
-                        "D4",
-                        time + Tone.Time("4n").toSeconds() * 3.5,
-                        this.kickVelocity
-                    );
-                }
-            });
-            beat45.probability = 0.25;
-            beat45.set({
-                loop: true,
-                loopEnd: "1n",
-            });
-            beat45.start(0);
-
             console.log("infinite improbability configured somehow");
 
             // loop length is 1 measure (1m)
@@ -229,9 +308,14 @@ export class GameAudio implements GameListener {
                     if (this.enabled.melody) {
                         //console.log("playing melody");
                         //this.playMidi(this.piano, melody, time);
+                        /*
                         melodyPattern.start();
                         melodyPattern2.start();
                         rhythmPattern.start();
+                        */
+                        for (let i = 0; i < this.activeMelody.length; i++) {
+                            this.activeMelody[i].start(0);
+                        }
                     }
 
                     // play the part at the end
