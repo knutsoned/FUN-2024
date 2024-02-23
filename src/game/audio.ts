@@ -101,12 +101,9 @@ export class GameAudio implements GameListener {
         // tempo
         Tone.Transport.bpm.value = this.bpm;
 
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const audio = this;
         Tone.loaded().then(() => {
             console.log("start the panic");
 
-            // eslint-disable-next-line @typescript-eslint/no-this-alias
             const melodyPattern = new Tone.Pattern(
                 (time, note) => {
                     if (this.piano) {
@@ -119,6 +116,18 @@ export class GameAudio implements GameListener {
             melodyPattern.playbackRate = 2;
             melodyPattern.probability = 0.35;
 
+            const melodyPattern2 = new Tone.Pattern(
+                (time, note) => {
+                    if (this.piano) {
+                        this.piano.triggerAttackRelease(note, "4n", time);
+                    }
+                },
+                ["C5", "E5", "G4", "A5"],
+                "randomWalk"
+            );
+            melodyPattern2.playbackRate = 2;
+            melodyPattern2.probability = 0.55;
+
             const rhythmPattern = new Tone.Pattern(
                 (time, note) => {
                     if (this.piano2) {
@@ -130,7 +139,25 @@ export class GameAudio implements GameListener {
             );
             rhythmPattern.probability = 0.42;
 
-            const note = new Tone.ToneEvent((time) => {
+            // beat 3
+            const beat3 = new Tone.ToneEvent((time) => {
+                if (this.kick) {
+                    this.kick.triggerAttack(
+                        "D4",
+                        time + Tone.Time("4n").toSeconds() * 2,
+                        this.kickVelocity
+                    );
+                }
+            });
+            beat3.probability = 0.66;
+            beat3.set({
+                loop: true,
+                loopEnd: "1n",
+            });
+            beat3.start(0);
+
+            // maybe beat 4.5
+            const beat45 = new Tone.ToneEvent((time) => {
                 if (this.kick) {
                     this.kick.triggerAttack(
                         "D4",
@@ -139,15 +166,17 @@ export class GameAudio implements GameListener {
                     );
                 }
             });
-            note.probability = 0.25;
-            note.set({
+            beat45.probability = 0.25;
+            beat45.set({
                 loop: true,
                 loopEnd: "1n",
             });
-            note.start(0);
+            beat45.start(0);
+
+            console.log("infinite improbability configured somehow");
 
             // loop length is 1 measure (1m)
-            audio.looper = new Tone.Loop((time) => {
+            this.looper = new Tone.Loop((time) => {
                 /*
                 // play the key loop
                 for (const key of Object.keys(audio.enabled)) {
@@ -164,15 +193,13 @@ export class GameAudio implements GameListener {
                 }
 
                 if (this.kick) {
+                    // beat 1
                     this.kick.triggerAttack("D4", time, this.kickVelocity);
+
+                    // beat 2
                     this.kick.triggerAttack(
                         "A4",
                         time + Tone.Time("4n").toSeconds(),
-                        this.kickVelocity
-                    );
-                    this.kick.triggerAttack(
-                        "D4",
-                        time + Tone.Time("4n").toSeconds() * 2,
                         this.kickVelocity
                     );
                 }
@@ -183,6 +210,7 @@ export class GameAudio implements GameListener {
                         //console.log("playing melody");
                         //this.playMidi(this.piano, melody, time);
                         melodyPattern.start();
+                        melodyPattern2.start();
                         rhythmPattern.start();
                     }
 
@@ -195,11 +223,11 @@ export class GameAudio implements GameListener {
             }, this.loopLength).start(0);
 
             // process effects every 1/4 note
-            audio.fx = new Tone.Loop((time) => {
-                if (audio.nearExit) {
-                    audio.setDistortion(0.6, time);
+            this.fx = new Tone.Loop((time) => {
+                if (this.nearExit) {
+                    this.setDistortion(0.6, time);
                 } else {
-                    audio.setDistortion(0, time);
+                    this.setDistortion(0, time);
                 }
             }, "8n").start(0);
 
