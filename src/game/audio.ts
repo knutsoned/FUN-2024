@@ -139,7 +139,39 @@ export class GameAudio implements GameListener {
             );
             rhythmPattern.probability = 0.42;
 
-            // beat 3
+            // 2.78 on the floor
+
+            // beat 1
+            const beat1 = new Tone.ToneEvent((time) => {
+                if (this.kick) {
+                    this.kick.triggerAttack("D4", time, this.kickVelocity);
+                }
+            });
+            //beat1.probability = 0.66;
+            beat1.set({
+                loop: true,
+                loopEnd: "1n",
+            });
+            beat1.start(0);
+
+            // beat 2
+            const beat2 = new Tone.ToneEvent((time) => {
+                if (this.kick) {
+                    this.kick.triggerAttack(
+                        "A4",
+                        time + Tone.Time("4n").toSeconds(),
+                        this.kickVelocity
+                    );
+                }
+            });
+            beat2.probability = 0.75;
+            beat2.set({
+                loop: true,
+                loopEnd: "1n",
+            });
+            beat2.start(0);
+
+            // maybe beat 3
             const beat3 = new Tone.ToneEvent((time) => {
                 if (this.kick) {
                     this.kick.triggerAttack(
@@ -190,18 +222,6 @@ export class GameAudio implements GameListener {
                 if (this.bass && this.enabled.bass) {
                     //console.log("playing bass");
                     this.playMidi(this.bass, bassline, time);
-                }
-
-                if (this.kick) {
-                    // beat 1
-                    this.kick.triggerAttack("D4", time, this.kickVelocity);
-
-                    // beat 2
-                    this.kick.triggerAttack(
-                        "A4",
-                        time + Tone.Time("4n").toSeconds(),
-                        this.kickVelocity
-                    );
                 }
 
                 if (this.piano) {
