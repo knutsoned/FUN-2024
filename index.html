@@ -18,6 +18,12 @@
         <canvas id="renderCanvas" touch-action="none"></canvas>
         <script type="module" src="/src/index.ts"></script>
         <script>
+            // intro
+            setTimeout(() => {
+                document.getElementById("remain").style.display = "block"
+                //document.getElementById("crawl").classList.add("fade")
+            }, 100000)
+
             async function startAudio() {
                 // initialize audio
                 await audioPlayer.init();
@@ -29,10 +35,56 @@
                 document.getElementById("renderCanvas").focus();
             }
         </script>
-        <div id="play">
-            <button onclick="startAudio()">
-                <span class="blink">REMAIN INDOORS</span>
-            </button>
+        <div id="play" class="titleCard" onclick="startAudio()">
+            <div id="crawl" class="star-wars-intro">
+                <p class="main-logo">Dungeon Crawler: The Musical</p>
+                <div class="main-content">
+                    <div class="title-content">
+                        <p class="content-header">Episode III:<br>Ottoman Invasion</p>
+
+                        <div class="content-body">
+                            <br>
+                            <br>
+                            <h1>1984</h1>
+                            <p>Professor Alger L. Elgar forms SoffiTech.</p>
+                            <br>
+                            <br>
+                            <h1>2023</h1>
+                            <p>
+                              Elgar has not been seen for 15 years.
+                              A rogue AI operating a Micronesian manufacturing plant begins to ship thousands and thousands of 
+                              ottoman footstools around the globe. The rampant code, named LINL (like the ThunderCat) 
+                              activates a murderous rampage mode on delivery. The Spanish Exposition traces its source to the 
+                              long-thought empty HQ of SoffiTech.
+                            </p>
+                            <br>
+                            <br>
+                            <h1>2024</h1>
+                            <p>
+                              Apparently, they left a laptop plugged in or something. It had taken over logistics 
+                              for a major supplier and got "auto" confused with "otto," then began automatically shipping 
+                              ottomans to every known address in the world. And they all want to kill you for some reason.
+                            </p>
+                            <br>
+                            <br>
+                            <h2>
+                              WARNING: LINL can pass a Voigt-Kampff test but has failed the Bechdel test twice.
+                            </h2>
+                            <br>
+                            <br>
+                            <p>
+                              You are Manuel Anular, leader of the Spanish Exposition. Your mission is to find and shutdown 
+                              the laptop, if not Elgar! And above all else...
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="titleCard reveal">
+                <button id="remain" class="space-button">
+                    <span class="blink">REMAIN INDOORS</span>
+                </button>
+            </div>
         </div>
     </body>
 </html>

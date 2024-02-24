@@ -3,8 +3,9 @@ import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
 import { getSceneModule } from "./createScene";
 
 import "nes.css/css/nes.min.css";
+import "./scss/starwarsintro.css";
 
-import "../style.scss";
+import "./scss/style.scss";
 
 /* eslint-disable */
 // console warning says to include this but there's nowhere to actually use it

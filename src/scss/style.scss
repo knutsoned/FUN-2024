@@ -19,6 +19,7 @@ body {
 }
 
 .blink {
+    z-index: 9001;
     animation: blink-animation 1s steps(5, start) infinite;
     -webkit-animation: blink-animation 1s steps(5, start) infinite;
 }
@@ -33,20 +34,42 @@ body {
     }
 }
 
-#play {
+.fade {
+    animation: fade-animation 10s steps(5, start) infinite;
+    -webkit-animation: fade-animation 10s steps(5, start) infinite;
+}
+
+@keyframes fade-animation {
+    to {
+        opacity: 0;
+    }
+}
+@-webkit-keyframes fade-animation {
+    to {
+        opacity: 0;
+    }
+}
+
+.titleCard {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+}
 
+#play {
     button {
         position: absolute;
-        font-size: 8rem;
+        font-size: 6rem;
         top: 50%;
         left: 50%;
         padding: 2rem;
         transform: translate(-50%, -50%);
+
+        &#remain {
+            display: none;
+        }
     }
 }
 
